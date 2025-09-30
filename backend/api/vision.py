@@ -1,26 +1,20 @@
-from fastapi import APIRouter, File, UploadFile
-
-from backend.services import google_drive
+from fastapi import APIRouter, UploadFile, File
+import shutil, os
+from ..services.vision_service import analyze_image
+from ..services.rag_service import add_document
 
 router = APIRouter()
+IMG_DIR = "images"
+os.makedirs(IMG_DIR, exist_ok=True)
 
-@router.post("/vision")
-async def analyze_image(file: UploadFile = File(...)):
-    """Analyse an image and optionally store the artefact on Drive."""
+@router.post("/vision/{project_id}")
+async def analyze(project_id: str, file: UploadFile = File(...)):
+    path = os.path.join(IMG_DIR, file.filename)
+    with open(path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
 
-    service = google_drive.get_drive_service()
-    detections = []
-    if service is None:
-        return {
-            "status": "stubbed",
-            "detections": detections,
-            "file_id": google_drive.upload_to_drive(file, lookup_service=False),
-            "detail": google_drive.drive_service_error(),
-        }
+    detections = analyze_image(path)
+    summary = f"Found {len(detections)} objects: " + ", ".join([d['class'] for d in detections])
+    add_document(project_id, summary, file.filename)
 
-    file_id = google_drive.upload_to_drive(file, service=service, lookup_service=False)
-    return {
-        "status": "ok",
-        "detections": detections,
-        "file_id": file_id,
-    }
+    return {"detections": detections, "summary": summary}
