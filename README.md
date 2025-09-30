@@ -1,209 +1,127 @@
-# Diriyah Brain AI - Construction Project Management System
+# Diriyah Brain AI
 
-A comprehensive construction project management system with AI support, featuring real-time data integration, intelligent analytics, and modern web interface.
+![Diriyah Logo](frontend/public/diriyah-logo.png)
 
-## Features
+## Overview
+Diriyah Brain AI is an integrated platform for **mega-project delivery**, built to unify CAD/BIM data, BOQs, Primavera schedules, and Aconex documentation into one AI-driven system.
 
-- **AI-Powered Assistant**: Chat with an AI assistant for project insights and recommendations
-- **Project Dashboard**: Real-time project metrics, alerts, and status tracking
-- **File Management**: Integration with Google Drive for document management
-- **Quality Analysis**: AI-powered photo analysis for construction site safety and compliance
-- **Multi-Platform Integration**: Support for WhatsApp, Microsoft Teams, Aconex, P6, and PowerBI
-- **Export Capabilities**: Generate PDF reports and Excel spreadsheets
-- **Modern UI**: Responsive React frontend with Tailwind CSS and shadcn/ui components
+## Key Modules
+- **CAD/BOQ/QTO Parsing**: Automated quantity take-off and bill of quantities parsing.
+- **BIM Integration**: Direct handling of BIM/IFC models and data.
+- **YOLO Vision Models**: Placeholder models (yolov8m, yolov8n, yolov8s) for site photo analysis and vision AI.
+- **Speech-to-Text**: Voice commands and transcription, integrated in services.
+- **API Layer**: Full suite of APIs for chat, projects, Aconex, Google Drive, QTO, and analytics.
+- **Frontend**: React-based interface with Chat, Sidebar, Navbar, and live integration with backend services.
 
-## Technology Stack
+## Branding
+This build is fully branded for **Diriyah Company**, replacing prior placeholders.
 
-### Backend
-- **FastAPI**: Modern Python web framework
-- **SQLite**: Lightweight database for development
-- **OpenAI API**: AI chat functionality
-- **Pillow**: Image processing
-- **ReportLab**: PDF generation
-- **OpenPyXL**: Excel file generation
 
-### Frontend
-- **React**: Modern JavaScript framework
-- **Vite**: Fast build tool
-- **Tailwind CSS**: Utility-first CSS framework
-- **shadcn/ui**: High-quality React components
-- **Lucide Icons**: Beautiful icon library
 
-## Project Structure
+## 🧠 Logic Thinking Features
 
+### 1. Intent Recognition & Routing
+- Registry-based router — each service self-registers.
+- Classifier fallback (TF-IDF + Logistic Regression).
+- Validation layer (CAD ↔ BOQ mismatches).
+
+### 2. Context & Memory
+- Session context in chat.
+- Database persistence (`projects`, `alerts`, `approvals`).
+- Models stored in `backend/models/` and persisted with K8s PVC.
+
+### 3. Reasoning / Orchestration
+- Multi-service orchestration (e.g., Consolidated Takeoff).
+- Fallback clarification for low-confidence intents.
+- Automated validation checks → alerts.
+
+### 4. Alerts & Monitoring
+- Real-time alerts over WebSockets.
+- Role- & project-based filtering (`/api/alerts`, `/api/users/me`).
+- Alerts visible in:
+  - Chat feed (inline, clickable).
+  - Alerts Panel (filterable dashboard).
+  - Visual toast popup (deployment alerts).
+
+### 5. Slack-Driven Approvals
+- Interactive Slack buttons (Approve/Reject).
+- Multi-approver threshold logic.
+- Threaded updates in Slack (clean UX).
+- Decisions logged in DB + raised as alerts.
+
+### 6. CI/CD Intelligence
+- CI pipeline trains and tests intent model.
+- Artifacts → models, Docker images, Helm charts.
+- Approval-gated production deploy (via Slack).
+- Rollbacks via versioned Helm charts.
+
+### 7. Kubernetes / GitOps Integration
+- Persistent DB + models (PVC).
+- ArgoCD for auto-sync + drift correction.
+- Multi-environment flow: **Dev → Staging → Prod (approval required)**.
+
+---
+
+## 🚀 Why It Matters
+Diriyah Brain AI doesn’t just run commands — it *thinks*:
+- Understands intent.
+- Validates outputs.
+- Raises alerts.
+- Involves humans in critical decisions.
+- Improves itself automatically via CI/CD.
+- Deploys with safety gates and rollback paths.
+
+It is **Aconex-style approvals + DevOps reasoning + project delivery intelligence** combined in one platform.
+
+
+## Addons (18-feature bundle)
+- New API: `POST /api/chat_addons` (ensemble intents + context + entities + memory + KG + suggestions)
+- Addons services under `backend/services/addons/`
+- Docker/K8s persistence for Redis+Chroma added in `deploy/k8s/`
+
+
+---
+
+## 🔭 Tracing
+
+OpenTelemetry is enabled for the backend.
+
+- Default exporter: OTLP → `otel-collector` in the cluster.  
+- The collector currently exports to logs.  
+- DevOps can extend the collector to forward to Jaeger, Tempo, or Datadog.
+
+
+---
+
+## 🐳 Docker Images
+
+Each CI build publishes:
+- `:latest` → moving pointer for dev/staging
+- `:vX.Y.Z` → immutable tag for production (current: v1.21.0)
+
+
+---
+
+## 🔐 Secret Scanning & Notifications
+
+- **Gitleaks** runs in CI to detect hardcoded secrets in commits/PRs.  
+- **Slack notifications** are triggered on pipeline failures (requires `SLACK_WEBHOOK_URL` in repo secrets).  
+
+
+---
+
+## 💰 Cost Monitoring
+
+- Kubecost manifests (`deploy/k8s/kubecost.yaml`) provide in-cluster cost visibility.  
+- Access the Kubecost dashboard via the `kubecost` service (port 9003).  
+
+
+---
+
+## 🌱 Demo Data
+
+Populate the app with demo data for quick testing:
+
+```bash
+python scripts/seed_demo_data.py
 ```
-diriyah-ai-demo/
-├── main.py                     # FastAPI application entry point
-├── requirements.txt            # Python dependencies
-├── .env                       # Environment variables
-├── render.yaml                # Render deployment configuration
-├── diriyah_brain_ai/          # Backend modules
-│   ├── config.py              # Configuration settings
-│   ├── db_init.py             # Database initialization
-│   ├── schemas.py             # Pydantic models
-│   ├── drive_adapter.py       # Google Drive integration
-│   ├── routers/               # API route modules
-│   │   ├── projects.py        # Project management routes
-│   │   ├── ai.py              # AI chat routes
-│   │   ├── integrations.py    # WhatsApp/Teams integration
-│   │   ├── drive.py           # Google Drive routes
-│   │   └── mock_data.py       # Mock data for testing
-│   └── static/                # Static files and built frontend
-├── diriyah-frontend/          # React frontend source
-│   ├── src/
-│   │   ├── App.jsx            # Main React component
-│   │   ├── App.css            # Styles
-│   │   └── components/        # UI components
-│   ├── package.json           # Node.js dependencies
-│   └── vite.config.js         # Vite configuration
-└── uploads/                   # File upload directory
-```
-
-## Local Development
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- pnpm (recommended) or npm
-
-### Backend Setup
-1. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys
-   ```
-
-3. Run the backend server:
-   ```bash
-   python main.py
-   ```
-   The API will be available at `http://localhost:8080`
-
-### Frontend Development
-1. Navigate to the frontend directory:
-   ```bash
-   cd diriyah-frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-3. Start the development server:
-   ```bash
-   pnpm run dev
-   ```
-   The frontend will be available at `http://localhost:5173`
-
-### Building for Production
-1. Build the React frontend:
-   ```bash
-   cd diriyah-frontend
-   pnpm run build
-   ```
-
-2. Copy built files to backend static directory:
-   ```bash
-   cp -r diriyah-frontend/dist/* diriyah_brain_ai/static/
-   ```
-
-## Deployment
-
-### GitHub Setup
-1. Initialize git repository:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
-
-2. Create a new repository on GitHub and push:
-   ```bash
-   git remote add origin https://github.com/yourusername/diriyah-brain-ai.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-### Render Deployment
-1. Connect your GitHub repository to Render
-2. Use the provided `render.yaml` configuration
-3. Set environment variables in Render dashboard:
-   - `OPENAI_API_KEY`: Your OpenAI API key (optional for testing)
-   - Other API keys as needed
-
-### Environment Variables
-- `OPENAI_API_KEY`: OpenAI API key for AI chat functionality
-- `DATABASE_URL`: Database connection string (SQLite for development)
-- `TEAMS_API_KEY`: Microsoft Teams API key
-- `WHATSAPP_TOKEN`: WhatsApp Business API token
-- `ACONEX_API_KEY`: Aconex API key
-- `P6_API_KEY`: Primavera P6 API key
-- `POWERBI_API_KEY`: PowerBI API key
-- `YOLO_MODEL_PATH`: Path to YOLO model for image analysis
-
-## API Documentation
-
-Once the server is running, visit `http://localhost:8080/docs` for interactive API documentation.
-
-### Key Endpoints
-- `GET /projects/list`: List all projects
-- `POST /api/ai/chat`: Chat with AI assistant
-- `GET /drive/files`: Get project files from Google Drive
-- `POST /quality/photo`: Analyze construction photos
-- `GET /export/pdf`: Export project report as PDF
-- `GET /export/excel`: Export alerts as Excel file
-
-## Features in Detail
-
-### AI Assistant
-The AI assistant provides intelligent responses to project-related queries. It can help with:
-- Project status inquiries
-- Risk assessment
-- Resource planning recommendations
-- Technical guidance
-
-### Google Drive Integration
-The system integrates with Google Drive to:
-- List project files
-- Search documents
-- Provide centralized file access
-- Maintain project documentation
-
-### Quality Analysis
-Upload construction site photos for AI-powered analysis:
-- Safety compliance checking
-- Object detection (workers, equipment, safety gear)
-- Automated reporting
-- Visual documentation
-
-### Multi-Platform Integration
-Connect with various construction industry tools:
-- **WhatsApp**: Team communication and notifications
-- **Microsoft Teams**: Corporate communication
-- **Aconex**: Document management and correspondence
-- **Primavera P6**: Project scheduling and milestones
-- **PowerBI**: Advanced analytics and reporting
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and commit: `git commit -m "Add feature"`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support and questions, please open an issue on GitHub or contact the development team.
-
-
